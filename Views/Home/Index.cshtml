@@ -1,5 +1,5 @@
-﻿@* @model List<WebApplication1.Data.Banan> *@
-@model List<WebApplication1.Data.News>
+﻿@model List<WebApplication1.Data.Banan>
+
 @{
     Layout = null;
 }
@@ -14,31 +14,30 @@
 <body>
     <h1 class="text-center">Користувачі</h1>
     <div class="container">
+        <a href="@Url.Action("Create")" class="btn btn-success">Додати</a>
+
         <table class="table">
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Заголовок</th>
-                    <th scope="col">URL-адреса</th>
-                    <th scope="col">Опис</th>
-                    <th scope="col">Повний текст</th>
                     <th scope="col">Фото</th>
+                    <th scope="col">Назва</th>
+                    <th scope="col">Телефон</th>
+                    <th scope="col">Стать</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var news in Model)
+                @foreach (var banan in Model)
                 {
+                    var image = banan.Image ?? "https://wl-brightside.cf.tsp.li/resize/728x/jpg/5a0/83d/948dad5d008eb09c86783a0f4c.jpg";
                     <tr>
-                        <td>@news.Id</td>
-                        
-                        <td>@news.title</td>
-                        <td>@news.slug</td>
-                        <td>@news.summary</td>
-                        <td>@news.content</td>
+                        <td>@banan.Id</td>
                         <td>
-                            <img src=@news.Image width="75" />
+                            <img src=@image width="75" />
                         </td>
-                        
+                        <td>@banan.LastName @banan.FirstName</td>
+                        <td>@banan.Phone</td>
+                        <td>@(banan.Sex ? "Чоловік" : "Жінка")</td>
                     </tr>
                 }
 
