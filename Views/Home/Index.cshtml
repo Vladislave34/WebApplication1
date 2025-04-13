@@ -29,7 +29,7 @@
             <tbody>
                 @foreach (var banan in Model)
                 {
-                    var image = banan.Image ?? "https://wl-brightside.cf.tsp.li/resize/728x/jpg/5a0/83d/948dad5d008eb09c86783a0f4c.jpg";
+                    var image = banan.Image!=null ? $"/uploads/{banan.Image}" : "https://wl-brightside.cf.tsp.li/resize/728x/jpg/5a0/83d/948dad5d008eb09c86783a0f4c.jpg";
                     <tr>
                         <td>@banan.Id</td>
                         <td>

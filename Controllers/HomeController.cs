@@ -5,6 +5,11 @@ using WebApplication1.Data;
 using WebApplication1.Models;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using SixLabors.ImageSharp.Formats.Webp;
+
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Webp;
 
 namespace WebApplication1.Controllers
 {
@@ -39,6 +44,51 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> Create(IFormFile Photo, string LastName, string FirstName, string Phone, bool Sex)
+        //{
+        //    string? photoUrl = null;
+
+        //    if (Photo != null && Photo.Length > 0)
+        //    {
+        //        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+        //        Directory.CreateDirectory(uploadsFolder);
+
+        //        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Photo.FileName);
+        //        var filePath = Path.Combine(uploadsFolder, fileName);
+
+        //        using var stream = Photo.OpenReadStream();
+        //        using var newImage = await Image.LoadAsync(stream); // ImageSharp завантажує з потоку
+
+        //        newImage.Mutate(x => x.Resize(new ResizeOptions
+        //        {
+        //            Size = new Size(800, 600),
+        //            Mode = ResizeMode.Max
+        //        }));
+
+        //        await newImage.SaveAsync(filePath); // автоматично визначає формат за розширенням
+
+        //        // Шлях, який зберігатимемо в базі
+        //        photoUrl = fileName;
+        //    }
+
+        //    // Створюємо об'єкт
+        //    var banan = new Banan
+        //    {
+        //        FirstName = FirstName,
+        //        LastName = LastName,
+        //        Phone = Phone,
+        //        Sex = Sex,
+        //        Image = photoUrl
+        //    };
+
+        //    // Зберігаємо в базу
+        //    await _context.Banans.AddAsync(banan);
+        //    await _context.SaveChangesAsync();
+
+        //    return RedirectToAction(nameof(Index));
+        //}
+
         [HttpPost]
         public async Task<IActionResult> Create(IFormFile Photo, string LastName, string FirstName, string Phone, bool Sex)
         {
@@ -46,37 +96,59 @@ namespace WebApplication1.Controllers
 
             if (Photo != null && Photo.Length > 0)
             {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-                Directory.CreateDirectory(uploadsFolder);
+                var baseFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+                var uniqueFolderName = Guid.NewGuid().ToString();
+                var targetFolder = Path.Combine(baseFolder, uniqueFolderName);
+                Directory.CreateDirectory(targetFolder);
 
-                var fileName = Path.GetFileName(Photo.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
+                var extension = ".webp"; // Зберігаємо виключно як webp
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                using var stream = Photo.OpenReadStream();
+                using var image = await Image.LoadAsync(stream); // ImageSharp
+
+                int[] sizes = new[] { 100, 200, 400, 600, 800, 1200 };
+
+                var encoder = new WebpEncoder
                 {
-                    await Photo.CopyToAsync(stream);
-                }
+                    Quality = 75 // можна налаштувати якість
+                };
 
-                // Шлях, який зберігатимемо в базі
-                photoUrl = "D:\\Git\\project_c_13\\WebApplication1\\wwwroot\\uploads\\" + fileName;
+                foreach (var size in sizes)
+                {
+                    var resized = image.Clone(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(size, size),
+                        Mode = ResizeMode.Max
+                    }));
+
+                    var resizedFileName = $"{size}{extension}";
+                    var resizedFilePath = Path.Combine(targetFolder, resizedFileName);
+
+                    await resized.SaveAsync(resizedFilePath, encoder);
+
+                    if (size == 800)
+                    {
+                        photoUrl = Path.Combine(uniqueFolderName, resizedFileName).Replace("\\", "/");
+                    }
+                }
             }
 
-            // Створюємо об'єкт
             var banan = new Banan
             {
                 FirstName = FirstName,
                 LastName = LastName,
                 Phone = Phone,
                 Sex = Sex,
-                Image = photoUrl
+                Image = photoUrl // шлях до 800.webp
             };
 
-            // Зберігаємо в базу
             await _context.Banans.AddAsync(banan);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
+
+
 
 
         private Task<List<Banan>> GetListBanansAsync()
